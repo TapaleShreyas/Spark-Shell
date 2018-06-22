@@ -10,10 +10,11 @@ spark-shell \
 --num-executors 1 \
 --executor-memory 512M
 
+#### to check whether spark is up and running use below 2 checks
 sc
 sqlContext
 
-To start new Spark Context
+#### To start new Spark Context programmatically
 sc.stop
 
 import org.apache.spark.{SparkConf, SparkContext}
@@ -26,6 +27,10 @@ sc.getConf.getAll.foreach(println)
 
 hadoop fs -put /root/database/retail_db/orders /database/
 
+
+#### to check whether another spark context is running on same port or not 
 ps aux | grep spark
+
+OR
 
 netstat -lnap | grep portNumber
