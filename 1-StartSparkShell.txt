@@ -1,0 +1,31 @@
+spark-shell --master yarn 
+	--conf spark.ui.port=31644   (5 digit number)
+
+sudo service hive-metastore status
+sudo service hive-server2 status
+
+spark-shell \
+--master yarn \
+--conf spark.ui.port=45645 \
+--num-executors 1 \
+--executor-memory 512M
+
+sc
+sqlContext
+
+To start new Spark Context
+sc.stop
+
+import org.apache.spark.{SparkConf, SparkContext}
+val conf = new SparkConf().setAppName("Test Conf and Context").setMaster("yarn-client")
+val sc = new SparkContext(conf)
+
+sc.getConf.getAll()
+
+sc.getConf.getAll.foreach(println)
+
+hadoop fs -put /root/database/retail_db/orders /database/
+
+ps aux | grep spark
+
+netstat -lnap | grep portNumber

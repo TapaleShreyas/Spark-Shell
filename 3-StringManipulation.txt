@@ -1,0 +1,13 @@
+val arr = orders.split(",")
+val order_customer_id = arr(0).toInt
+val order_date = arr(1)
+val order_id = arr(2).toInt
+val order_status = arr(3)
+
+val dat1 = order_date.substring(0, 10)
+val dat2 = dat1.indexOf("2")
+val dat3 = dat1.indexOf("2", 2)
+val dat4 = dat1.replace("-", " ")
+val dat5 = dat1.replace("07", "July")
+
+dat5.length

@@ -1,0 +1,26 @@
+#### Read text file
+ 1) From local Directory
+	val orders = scala.io.Source.fromFile("/root/database/retail_db/orders/part-00000").getLines
+	val ordersRDD = sc.parallelize(orders.toList)
+	ordersRDD.first
+	ordersRDD.take(10).foreach(println)
+	
+ 2) From HDFS
+	val ordersRDD = sc.textFile("/database/orders/part-00000")
+	ordersRDD.take(5).foreach(println)
+
+
+
+#### Read json file 
+
+ 1) Using json.read with one argument only
+	val orders = sqlContext.read.json("/database/retail_db_json/orders/part-r-00000-990f5773-9005-49ba-b670-631286032674")
+	orders.show
+	orders.printSchema
+	orders.select("order_id", "order_status").show
+
+ 2) Using load which accepts 2 arguments
+	val orders = sqlContext.load("/database/retail_db_json/orders/part-r-00000-990f5773-9005-49ba-b670-631286032674","json")
+	orders.show()
+	orders.printSchema
+	orders.select("order_customer_id","order_id").show

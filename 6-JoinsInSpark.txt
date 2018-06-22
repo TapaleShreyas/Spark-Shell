@@ -1,0 +1,18 @@
+val orders = sc.textFile("/database/retail_db/orders")
+val orderItems = sc.textFile("/database/retail_db/order_items")
+
+
+val pairOrders = orders.map(order => {
+	val arr = order.split(",")
+	//order_id, order_date pair
+	(arr(0).toInt, arr(1).substring(0,10))
+})
+
+
+val pairOrderItems = orderItems.map(orderItem => {
+	val arr = orderItem.split(",")
+	//order_item_order_id, sub_total
+	(arr(1).toInt, arr(5).toFloat)
+})
+
+val joins = pairOrders.join(pairOrderItems)

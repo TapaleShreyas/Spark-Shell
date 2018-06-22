@@ -1,0 +1,38 @@
+val ordersRDD = sc.textFile("/database/orders/part-00000")
+
+val orders = ordersRDD.split(",")
+
+val pendingOrders = orders.filter(order => order.split(",")(3)== "PENDING_PAYMENT")
+pendingOrders.take(10).foreach(println)
+
+val completeOrders = orders.filter(order => order.split(",")(3)== "COMPLETE")
+compeleteOrders.take(10).foreach(println)
+
+##### Find the orders from 2013-07 which are pending for payment
+
+val pending = orders.filter(order => {
+	val arr = order.split(",")
+	arr(3) == "PENDING_PAYMENT" && arr(1).contains("2013-07")
+})
+
+pending.take(10).foreach(println)
+
+
+### Find all the fraud and on-hold orders
+
+orders.map(order => order.split(",")(3)).distinct.collect.foreach(println)
+
+val fraudOrders = orders.filter(order => order.split(",")(3) == "SUSPECTED_FRAUD
+fraudOrders.take(10).foreach(println)
+
+val onHoldOrders = orders.filter(order => order.split(",")(3) == "ON_HOLD")
+onHoldOrders.take(10).foreach(println)
+
+val fraudandOnHoldOrders = orders.filter(order => {
+	val arr = order.split(",")
+	(arr(3) == "SUSPECTED_FRAUD" || arr(3) == "ON_HOLD")
+})
+fraudandOnHoldOrders.take(10).foreach(println)
+fraudandOnHoldOrders.count
+
+

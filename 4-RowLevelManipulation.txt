@@ -1,0 +1,39 @@
+#### Use of map
+val orders = sc.textFile("/database/orders/part-00000")
+
+val orderDate = orders.first.split(",")(1).substring(0,10).replace("07","July").replace("-", " ")
+
+val orderDates = orders.map(x => {
+	val order = x.split(",")
+	(order(0).toInt, order(1).substring(0,10))
+})
+
+val orderItems = sc.textFile("/database/retail_db/order_items")
+orderItems.first
+
+val pairs = orderItems.map(orderItem => (orderItem.split(",")(1).toInt, orderItem))
+pairs.take(5).foreach(println)
+
+
+#### Use of flatMap
+
+val list = List(
+List("A", "B", "c"),
+List("D", "E", "F"),
+List("G", "H", "I")
+)
+
+val flattenList = list.flatten
+val flattenListMap = flattenList.map(e => e.toLowerCase)
+
+val flatMapList = list.flatMap(e => e.map(_.toLowerCase))
+
+val scalalist = List("Hello from spark", "welcome to the spark world", "Big data world", "the universe", "the moon")
+
+val list = sc.parallelize(scalalist)
+val mapList = list.map(_.split(" "))
+val flatMap = list.flatMap(_.split(" ")) 
+
+val wordCount = flatMap.map(e => (e,"")).countByKey
+val wordCount = flatMap.map(e => (e,1)).countByKey
+
