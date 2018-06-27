@@ -1,11 +1,12 @@
+#### Equi Join ####
+
 val orders = sc.textFile("/database/retail_db/orders")
 val orderItems = sc.textFile("/database/retail_db/order_items")
-
 
 val pairOrders = orders.map(order => {
 	val arr = order.split(",")
 	//order_id, order_date pair
-	(arr(0).toInt, arr(1).substring(0,10))
+	(arr(0).toInt, arr(1))
 })
 
 
@@ -16,3 +17,31 @@ val pairOrderItems = orderItems.map(orderItem => {
 })
 
 val joins = pairOrders.join(pairOrderItems)
+joins.count
+
+
+
+#### Left and Right Outer Joins ####
+
+val orders = sc.textFile("/database/retail_db/orders")
+val orderItems = sc.textFile("/database/retail_db/order_items")
+
+val pairOrders = orders.map(order => {
+	val arr = order.split(",")
+	(arr(0).toInt, order)
+})
+
+val pairOrderItems = orderItems.map(orderItem => {
+	val arr = orderItem.split(",")
+	(arr(1).toInt, orderItem)
+})
+
+val leftOuterJoins = pairOrders.leftOuterJoin(pairOrderItems)
+leftOuterJoins.count
+val ordersWithoutOrderItems = leftOuterJoins.filter(o => o._2._2 == None).map(_._2._1)
+
+
+val rightOuterJoins = pairOrderItems.rightOuterJoin(pairOrders)
+rightOuterJoins.count
+val ordersWithoutOrderItems = rightOuterJoins.filter(_._2._1 == None).map(_._2._2)
+

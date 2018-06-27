@@ -1,0 +1,112 @@
+#### Find count of each type of order(closed, open, pending etc.) ####
+
+val orders = sc.textFile("/database/retail_db/orders")
+// (order_status, 1)
+val ordersMap = orders.map(order => (order.split(",")(3),1))
+val ordersCount = ordersmap.countByKey
+ordersCount.foreach(println)
+
+-------------------------------------------------------------------------------------------
+
+#### Find the total revenue of all order items ####
+
+val orderItems = sc.textFile("/database/retail_db/order_items")
+//(order_sub_total)
+val orderItemsMap = orderItems.map(orderItem => orderItem.split(",")(4).toFloat)
+
+orderItemsMap.take(10).foreach(println)
+
+val orderItemsRevenue = orderItemsMap.reduce((total, revenue) => total + revenue)
+
+-------------------------------------------------------------------------------------------
+
+#### find order item with max revenue ####
+
+val maxOrderItemRevenue = orderItemsMap.reduce((total, revenue) =>{
+	if(total < revenue) revenue else total
+})
+
+-------------------------------------------------------------------------------------------
+
+#### USE OF GROUP BY KEY ####
+import scala.io.Source
+val orderItemsIterator = Source.fromFile("/root/database/retail_db/order_items/part-00000").getLines
+
+//convert iterator into RDD
+val orderItems = sc.parallelize(orderItemsIterator.toList)
+
+val orderItemsMap = orderItems.map(orderItem => {
+	val orderArr = orderItem.split(",")
+	(orderArr(1).toInt, orderArr(4).toFloat)
+})
+
+val groupOrderItems = orderItemsMap.groupByKey
+groupOrderItems.take(10).foreach(println)
+
+-------------------------------------------------------------------------------------------
+
+####  Find Order Revenue of each order ####
+
+val orderRevenue = groupOrderItems.map(order => {
+	(order._1, order._2.toList.sum)
+}) 
+
+orderRevenue.take(10).foreach(println)
+
+#### sort by order Revenue ####
+
+val sortByRevenue = orderRevenue.map(order => (order._2, order._1)).sortByKey(true)
+sortByOrderRevenue.take(10).foreach(println)
+
+val sortedOrderRevenue = sortByRevenue.map(order => (order._2, order._1))
+sortedOrderRevenue.take(10).foreach(println)
+
+#### Another approach to sort by Order revenue ####
+
+val ordersSortedByRevenue = groupOrderItems.
+  flatMap(order => {
+    order._2.toList.sortBy(o => -o).map(k => (order._1, k))
+})
+
+sortedOrderRevenue.take(10).foreach(println)
+
+-------------------------------------------------------------------------------------------
+
+#### USE OF REDUCE BY KEY ####
+
+
+val orderItems = sc.textFile("/database/retail_db/order_items")
+
+val orderItemsMap = orderItems.map(order => {
+	val orderItemArr = order.split(",")
+	(orderItemArr(1).toInt, orderItemArr(4).toFloat)
+})
+orderItemsMap.take(10).foreach(println)
+
+val reduceOrderItems = orderItemsMap.reduceByKey(
+	(total, revenue) => total + revenue 
+)
+
+reduceOrderItems.take(10).foreach(println)
+
+#### Find min and max revenue per order ID ####
+
+val minOrderItemRevenue = orderItemsMap.reduceByKey(
+(revenue1, revenue2) => if(revenue1 < revenue2) revenue1 else revenue2
+)
+minOrderItemRevenue.take(10).foreach(println)
+
+
+val maxOrderItemRevenue = orderItemsMap.reduceByKey(
+	(revenue1, revenue2) => if(revenue1 > revenue2) revenue1 else revenue2
+)
+maxOrderItemRevenue.take(10).foreach(println)
+
+
+
+
+
+
+
+
+

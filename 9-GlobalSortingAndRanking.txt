@@ -1,0 +1,43 @@
+
+val productsDF = sqlContext.read.json("/database/retail_db_json/products")
+productDF.printSchema
+
+ |-- product_category_id: long (nullable = true)
+ |-- product_description: string (nullable = true)
+ |-- product_id: long (nullable = true)
+ |-- product_image: string (nullable = true)
+ |-- product_name: string (nullable = true)
+ |-- product_price: double (nullable = true)
+
+
+#### USE of SORT BY KEY ####
+
+val products = sc.textFile("/database/retail_db/products")
+val productsMap = products.map(product => {
+	val splitArr = product.split(",")
+	
+	//(category_id, product)
+	(splitArr(1).toInt, product)
+})
+
+val productsByCategoryId = productsMap.sortByKey()
+
+productsByCategoryId.take(10).foreach(println)
+
+
+### when 2 keys then default it takes asc for both the keys or if you pass false to sortByKey then it will sort both keys in desc order. ###
+
+#### HOW TO SORT FIRST KEY IN ASC ORDER AND SECOND KEY IN DESC ORDER ####
+
+val products = sc.textFile("/database/retail_db/products")
+val filterBadProducts = products.filter(product => product.split(",")(4) != "")
+val productsMap = filterBadProducts.map(product => {
+			val arr = product.split(",")
+			
+	//((category_id, price), product)		
+	((arr(1).toInt, -arr(4).toFloat), product)
+})
+
+val sortedProducts = productsMap.sortByKey()
+sortedProducts.take(10).foreach(println)
+

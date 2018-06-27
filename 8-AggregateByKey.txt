@@ -1,0 +1,12 @@
+#### USE OF AGGREGATE BY KEY ####
+
+val orderItems = sc.textFile("/database/retail_db/orderItems")
+
+val orderItemsMap = orderItems.map(order => {
+	val arr = order.split(",")
+
+	//(order_id, order_item_subtotal)	
+	(arr(1).toInt, arr(4).toFloat)
+})
+
+
