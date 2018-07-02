@@ -1,0 +1,58 @@
+#### SET OPERATIONS ####
+
+orders : order_id | order_date | order_customer_id | order_status
+
+statement : Find all the customers who placed orders in Aug 2013 and Sept 2013
+
+import scala.io.Source
+val ordersIterator = Source.fromFile("/root/database/retail_db/orders/part-00000").getLines
+val orders = sc.parallelize(ordersIterator.toList)
+
+val customers_sept_2013 = orders.filter(order => order.split(",")(1).contains("2013-09"))
+val sept_customers_map = customers_sept_2013.map(order => order.split(",")(2).toInt)
+
+sept_customers_map.count
+sept_customers_map.distinct.count
+
+val customers_aug_2013 = orders.filter(order => order.split(",")(1).contains("2013-08"))
+val aug_customers_map = customers_aug_2013.map(o => o.split(",")(2).toInt)
+
+aug_customers_map.count
+aug_customers_map.distinct.count
+	
+val aug_sept_customers = sept_customers_map.intersection(aug_customers_map)
+aug_sept_customers.take(50).foreach(println)
+
+//as intersection takes distinct values only so no need to do distinct again
+aug_sept_customers.count
+aug_sept_customers.distinct.count
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+statement : Find all the customers who placed orders either in sept or aug 2013
+
+val aug_or_sept_customers = sept_customers_map.union(aug_customers_map)
+
+aug_or_sept_customers.count
+
+//union may contains duplicate record to eliminate 
+aug_or_sept_customers.distinct.count
+
+aug_or_sept_customers.take(50).foreach(println)
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+statement : Get all the customers who placed orders in Aug 2013 but not in Sept 2013(Find A-B)
+
+// Join need key value pair so convert each RDD into key value pair
+val aug_2013 = aug_customers_map.map(order => (order, 1)).leftOuterJoin(sept_customers_map.map(order => (order, 1)))
+aug_2013.count
+		
+// Join contains matching records from both RDD plus non matching records from Aug 2013
+
+// to get Only August record , Remove matching records from resultant RDD
+
+val only_aug_2013 = aug_2013.filter(order => order._2._2 == None)		
+only_aug_2013.count
+
+--------------------------------------------------------------------------------------------------------------------------------

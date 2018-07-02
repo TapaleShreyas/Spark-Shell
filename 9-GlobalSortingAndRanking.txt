@@ -9,8 +9,11 @@ productDF.printSchema
  |-- product_name: string (nullable = true)
  |-- product_price: double (nullable = true)
 
+--------------------------------------------------------------------------------------------------------------------------------
 
 #### USE of SORT BY KEY ####
+
+statement : sort the records from products table in ascending order of category_id.
 
 val products = sc.textFile("/database/retail_db/products")
 val productsMap = products.map(product => {
@@ -20,24 +23,87 @@ val productsMap = products.map(product => {
 	(splitArr(1).toInt, product)
 })
 
+// defaut sorting order is ascending
+// for descending sorting just pass false param to sortByKey method.
 val productsByCategoryId = productsMap.sortByKey()
 
 productsByCategoryId.take(10).foreach(println)
 
+--------------------------------------------------------------------------------------------------------------------------------
 
-### when 2 keys then default it takes asc for both the keys or if you pass false to sortByKey then it will sort both keys in desc order. ###
+#### COMPOSITE KEY SORTING ###
+- By default both records will get sort in ascending order (first it will sort by first key and then by second)
+- If you pass false param to sortByKey method it will sort records by first key in desc and then second key in desc order.
+- When sorting is done you can eliminate key from dataset on which we have sort i.e. keep products only which is sorted
+
+statement : Sort the goven records by ascending key using (category_id, price) as composite key
+
+val products = sc.textFile("/database/retail_db/products")
+val filterBadProducts = products.filter(product => product.split(",")(4) != "")
+
+// form key value pair as ((category_id,price), product)
+val productsMap = filterBadProducts.map(product => ((product.split(",")(1).toInt, product.split(",")(4).toFloat), product))
+	
+productsMap
+
+val sortedProducts = productsMap.sortByKey()
+sortedProducts.take(10).foreach(println)
+
+--------------------------------------------------------------------------------------------------------------------------------
 
 #### HOW TO SORT FIRST KEY IN ASC ORDER AND SECOND KEY IN DESC ORDER ####
+
+- While forming key value pair using composite key, Just pass - to second key and then do sortByKey
 
 val products = sc.textFile("/database/retail_db/products")
 val filterBadProducts = products.filter(product => product.split(",")(4) != "")
 val productsMap = filterBadProducts.map(product => {
-			val arr = product.split(",")
 			
-	//((category_id, price), product)		
-	((arr(1).toInt, -arr(4).toFloat), product)
+		val arr = product.split(",")
+		//((category_id, price), product)
+		// passing - to second key here		
+		((arr(1).toInt, -arr(4).toFloat), product)
 })
 
 val sortedProducts = productsMap.sortByKey()
 sortedProducts.take(10).foreach(println)
 
+--------------------------------------------------------------------------------------------------------------------------------
+
+#### RANKING - GLOBAL (DETAILS OF TOP 5 PRODUCTS) ####
+
+statement : Find top 5 product details (take data from local file system instead of HDFS)
+
+import scala.io.Source
+val productsIterator = Source.fromFile("/root/database/retail_db/products/part-00000").getLines
+val products = sc.parallelize(productsIterator.toList)
+
+val filterBadProducts = products.filter(product => product.split(",")(4) != "")
+val productsMap = filterBadProducts.map(product => {
+	val productArr = product.split(",")
+	(productArr(4).toFloat, product)
+})
+val top5Products = productsMap.sortByKey(false).take(5)
+
+top5Products.foreach(println)
+
+--------------- OR ------------
+
+another way of doing the same is 
+
+val productsIterator = Source.fromFile("/root/database/retail_db/products/part-00000").getLines
+val products = sc.parallelize(productsIterator.toList)
+
+products.
+filter(product => product.split(",")(4) != "").
+takeOrdered(5)(Ordering[Float].reverse
+	.on(product => product.split(",")(4).toFloat)).foreach(println)
+	
+----- get top 10 products --------
+
+products
+	.filter(product => product.split(",")(4) != "")
+	.takeOrdered(10)(Ordering[Float].reverse
+		.on(product => product.split(",")(4).toFloat)).foreach(println)
+		
+--------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,75 @@
+####  STATEMENT : Get topN priced products within each product category.  ####
+
+val products = sc.textFile("/database/retail_db/products")
+val filteredProducts = products.filter(product => product.split(",")(4) != "")
+val productsMap = filteredProducts.map(product => {
+	val productArr = product.split(",")
+	//(category_id, product)
+	(productArr(1).toInt, product)
+	}
+)
+
+val productGroups = productsMap.groupByKey
+
+//productGroups is of type 
+org.apache.spark.rdd.RDD[(Int, Iterable[String])]
+
+----------------------------------------------------------------->>>>>>>>>>>>
+
+Test for single product before defining method for all product
+
+// Take only iterable collection of first product
+val singleProduct = productGroups.first._2
+
+// List will contain duplicate prices
+val productPricesMultiple = singleProduct.map(product => product.split(",")(4).toFloat)
+
+// Eliminate duplicates by converting it into set
+val productPrices = productPricesMultiple.toSet
+
+// Now sort this in desc order and take top 5 prices from it .
+val top5 = productPrices.toList.sortBy(p => -p).take(5)
+top5.foreach(println)
+
+----------------------------------------------------------------->>>>>>>>>>>>
+
+val singleProduct = productGroups.first._2
+val sortedProducts = singleProduct.toList.sortBy(product => -product.split(",")(4).toFloat)
+
+val singleProductMin = top5.min
+
+//filter scans all the records
+val top5PricedProducts = sortedProducts.filter(product => product.split(",")(4).toFloat >= singleProductMin)
+
+//If data is already presorted then use takeWhile as it stops scanning further records when condition is false.
+
+val top5PricedProducts = sortedProducts.takeWhile(product => product.split(",")(4).toFloat >= singleProductMin)
+
+----------------------------------------------------------------->>>>>>>>>>>>
+ 
+Now define above all in one method/function for single Product
+	
+def getTopNPricedProducts(productsIterable: Iterable[String], topN: Int) : Iterable[String] = {
+	val productPrices = productsIterable.map(product => product.split(",")(4).toFloat).toSet
+	val topNPrices = productPrices.toList.sortBy(p => -p).take(topN)
+	val minPrice = topNPrices.min
+	
+	val sortedProducts = productsIterable.toList.sortBy(product => -product.split(",")(4).toFloat)
+	val top5PricedProducts = sortedProducts.takeWhile(product => product.split(",")(4).toFloat >= minPrice)
+	
+	top5PricedProducts
+}
+
+getTopNPricedProducts(singleProduct, 3).foreach(println)
+
+----------------------------------------------------------------->>>>>>>>>>>>
+
+
+Now call above function for each record from productGroups
+
+Here If you want output as category_id, collection then use map 
+val top3PricedProductsByCategory = productGroups.map(record => getTopNPricedProducts(record._2, 3))
+
+If you want output as seperate records then use flatMap
+
+val top3PricedProductsByCategory = productGroups.flatMap(record => getTopNPricedProducts(record._2, 3))

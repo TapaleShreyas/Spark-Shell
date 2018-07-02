@@ -1,0 +1,16 @@
+#### SAVE DATA TO HDFS ####
+
+orders : order_id | order_date | order_customer_id | order_status
+
+val orders = sc.textFile("/database/retail_db/orders")
+val countByStatus = orders.map(order => (order.split(",")(3), 1)).reduceByKey((total, count) => total + count)
+
+countByStatus.saveAsTextFile("/database/retail_db/orders/countByStatus")
+
+//to check whether data is saved or not  
+sc.textFile("/database/retail_db/orders/countByStatus").take(10).foreach(println)
+
+// another way to check data is save or not is using hadoop fs -ls path
+hadoop fs -ls /database/retail_db/orders/countByStatus
+hadoop fs -cat /database/retail_db/orders/countByStatus/part-00000
+
